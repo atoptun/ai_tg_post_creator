@@ -1,0 +1,13 @@
+# Exclude the project virtual environment from image builds
+.docker_data/
+.venv/
+.vscode/
+logs/
+nginx/
+compose.dev.yml
+compose.prod.yml
+compose.yml
+Dockerfile
+start_dev.sh
+start_prod.sh
+stop_prod.sh

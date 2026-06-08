@@ -1,0 +1,20 @@
+[project]
+name = "ai-tg-post-creator"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Andrii Toptun", email = "andrii.toptun@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "celery[librabbitmq,redis]>=5.6.3",
+    "fastapi[standard]>=0.136.3",
+    "flower>=2.0.1",
+    "gunicorn>=26.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "debugpy>=1.8.21",
+]

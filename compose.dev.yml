@@ -1,0 +1,111 @@
+services:
+  nginx:
+    volumes:
+      - ./logs/dev/nginx:/var/log/nginx
+
+  api:
+    build:
+      context: .
+      target: development
+    command: >
+      uv run python -m debugpy --listen 0.0.0.0:5678 -m 
+      fastapi dev --host 0.0.0.0
+    ports:
+      - "8000:8000" # fastapi
+      - "5678:5678" # debugpy
+
+    # Run as root during development so the environment is mutable
+    # Alternatively, you could set `UV_PROJECT_ENVIRONMENT` to a path owned by the non-root user
+    user: root
+
+    volumes:
+      - ./logs/dev:/app/logs
+      - /app/.venv/
+      - /root/.cache/uv/
+
+    develop:
+      # Create a `watch` configuration to update the app
+      # https://docs.docker.com/compose/file-watch/#compose-watch-versus-bind-mounts
+      watch:
+        # Sync the working directory with the `/app` directory in the container
+        - action: sync
+          path: ./app
+          target: /app/app
+          # Exclude the project virtual environment — it could be for a
+          # different platform in the container
+          ignore:
+            - .git/
+            - .venv/
+            - .vscode/
+            - .docker_data/
+            - logs/
+        # Rebuild the image if dependencies change by checking uv.lock
+        - action: rebuild
+          path: ./uv.lock
+
+  celery_worker:
+    build:
+      context: .
+      target: development
+    environment:
+      - UV_NO_DEV=0
+    volumes:
+      - ./logs/dev:/app/logs
+
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./app
+          target: /app/app
+        - action: rebuild
+          path: ./uv.lock
+
+  celery_beat:
+    build:
+      context: .
+      target: development
+    environment:
+      - UV_NO_DEV=0
+    volumes:
+      - ./logs/dev:/app/logs
+
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./app
+          target: /app/app
+        - action: rebuild
+          path: ./uv.lock
+
+  flower:
+    build:
+      context: .
+      target: development
+    volumes:
+      - ./logs/dev:/app/logs
+
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./app
+          target: /app/app
+        - action: rebuild
+          path: ./uv.lock
+
+  postgres:
+    volumes:
+      - ./.docker_data/postgres:/var/lib/postgresql
+
+  pgadmin4:
+    volumes:
+      - ./.docker_data/pgadmin4:/var/lib/pgadmin
+      # - ./pgadmin4/servers.json:/pgadmin4/servers.json    
+      # - ./pgadmin4/preferences.json:/pgadmin4/preferences.json    
+
+  rabbitmq:
+    volumes:
+      - ./.docker_data/rabbitmq/mnesia:/var/lib/rabbitmq/mnesia
+
+  redis:
+    volumes:
+      - ./.docker_data/redis:/data
