@@ -8,13 +8,30 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "celery[librabbitmq,redis]>=5.6.3",
+    "alembic>=1.18.4",
+    "asyncpg>=0.31.0",
+    "beautifulsoup4>=4.15.0",
     "fastapi[standard]>=0.136.3",
-    "flower>=2.0.1",
+    "faststream[cli,rabbit]>=0.7.1",
     "gunicorn>=26.0.0",
+    "sqlalchemy>=2.0.50",
+    "telethon>=1.43.2",
 ]
 
 [dependency-groups]
 dev = [
     "debugpy>=1.8.21",
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.4.0",
+    "pytest-env>=1.6.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+python_classes = ["Test", "Describe"]
+python_functions = ["test_", "it_", "and_", "but_", "they_"]
+python_files = ["test_*.py",]
+testpaths = ["tests",]
+env_files = [
+    ".env.test"
 ]
