@@ -22,7 +22,7 @@ TestSessionLocal = async_sessionmaker(
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def manage_test_database():
     """Automatically creates the test database before tests and optionally drops it after all tests."""
-    test_db_name = settings.postgres_url.rsplit("/", 1)[1]  # Витягує 'ainewsbot_test'
+    test_db_name = settings.POSTGRES_DB
 
     async with system_engine.connect() as conn:
         result = await conn.execute(
@@ -52,6 +52,6 @@ async def setup_test_db():
 
 @pytest_asyncio.fixture
 async def db_session() -> AsyncIterator[AsyncSession]:
-    """Надає чисту сесію для кожного тесту."""
+    """Provides a fresh database session for each test function, ensuring isolation and proper cleanup."""
     async with TestSessionLocal() as session:
         yield session

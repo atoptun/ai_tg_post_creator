@@ -2,8 +2,8 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi_pagination.ext.sqlalchemy import paginate
-from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import apaginate
+from fastapi_pagination import Page, Params
 
 from app.db import DbSessionDep
 from app.models import Source
@@ -14,9 +14,9 @@ class SourceRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_paginated_list(self) -> Page:
+    async def get_paginated_list(self, params: Params | None = None) -> Page:
         """Returns a paginated list of sources."""
-        return await paginate(self.db, select(Source))
+        return await apaginate(self.db, select(Source), params=params)
 
     async def get_by_id(self, source_id: int) -> Source | None:
         """Finds a single source by its ID."""

@@ -1,5 +1,5 @@
 # app/api/endpoints/sources.py
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page
 
 from app.api.schemas import SourceCreate, SourceUpdate, SourceOut
@@ -10,9 +10,9 @@ router = APIRouter(prefix="/sources", tags=["Sources"])
 
 
 @router.get("/", response_model=Page[SourceOut])
-async def list_sources(source_repo: SourceRepoDep):
+async def list_sources(source_repo: SourceRepoDep, params: Page[SourceOut].Params = Depends()):
     """Get a paginated list of all active/inactive sources."""
-    return await source_repo.get_paginated_list()
+    return await source_repo.get_paginated_list(params=params)
 
 
 @router.post("/", response_model=SourceOut, status_code=201)
@@ -46,3 +46,5 @@ async def delete_source(source_id: int, source_repo: SourceRepoDep):
     if not source:
         raise HTTPException(status_code=404, detail="Source not found")
     await source_repo.delete(source)
+
+

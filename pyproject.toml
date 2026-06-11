@@ -22,6 +22,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "debugpy>=1.8.21",
+    "faker>=40.23.0",
     "pytest>=9.0.3",
     "pytest-asyncio>=1.4.0",
     "pytest-env>=1.6.0",
