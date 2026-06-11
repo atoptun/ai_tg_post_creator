@@ -1,6 +1,5 @@
-# app/api/endpoints/sources.py
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi_pagination import Page
+from fastapi_pagination import Page, Params
 
 from app.api.schemas import SourceCreate, SourceUpdate, SourceOut
 from app.repositories.source import SourceRepoDep
@@ -10,7 +9,7 @@ router = APIRouter(prefix="/sources", tags=["Sources"])
 
 
 @router.get("/", response_model=Page[SourceOut])
-async def list_sources(source_repo: SourceRepoDep, params: Page[SourceOut].Params = Depends()):
+async def list_sources(source_repo: SourceRepoDep, params: Params = Depends()):
     """Get a paginated list of all active/inactive sources."""
     return await source_repo.get_paginated_list(params=params)
 

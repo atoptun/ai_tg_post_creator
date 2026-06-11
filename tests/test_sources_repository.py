@@ -152,7 +152,7 @@ async def test_get_paginated_list_multiple_pages(
         Source(
             name=faker.company(),
             type=faker.random_element(elements=("site", "tg")),
-            url=faker.url(),
+            url=faker.unique.url(),
         )
         for _ in range(total_items)
     ]
