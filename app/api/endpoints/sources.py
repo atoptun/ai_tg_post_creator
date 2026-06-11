@@ -17,7 +17,7 @@ async def list_sources(source_repo: SourceRepoDep, params: Params = Depends()):
 @router.post("/", response_model=SourceOut, status_code=201)
 async def create_source(body: SourceCreate, source_repo: SourceRepoDep):
     """Create a new tracking source (Website or Telegram channel)."""
-    return await source_repo.create(body)
+    return await source_repo.create(**body.model_dump())
 
 
 @router.get("/{source_id}", response_model=SourceOut)
@@ -35,7 +35,7 @@ async def update_source(source_id: int, body: SourceUpdate, source_repo: SourceR
     source = await source_repo.get_by_id(source_id)
     if not source:
         raise HTTPException(status_code=404, detail="Source not found")
-    return await source_repo.update(source, body)
+    return await source_repo.update(source, **body.model_dump(exclude_unset=True))
 
 
 @router.delete("/{source_id}", status_code=204)

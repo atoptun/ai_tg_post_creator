@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -24,7 +24,7 @@ class NewsItem(Base):
     url: Mapped[Optional[str]] = mapped_column(String(512), unique=True, nullable=True)
     summary: Mapped[Optional[str]]
     source: Mapped[str] = mapped_column(String(255))
-    published_at: Mapped[datetime]
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     raw_text: Mapped[Optional[str]]
 
 

@@ -1,9 +1,11 @@
 from fastapi import APIRouter
 
 from app.api.endpoints.sources import router as sources_router
-# from app.api.endpoints.keywords import router as keywords_router # твої майбутні модулі
+from app.api.endpoints.keywords import router as keywords_router
+from app.api.endpoints.news import router as news_router
 
 api_router = APIRouter(prefix="/api")
 
 api_router.include_router(sources_router)
-# api_router.include_router(keywords_router)
+api_router.include_router(keywords_router)
+api_router.include_router(news_router)

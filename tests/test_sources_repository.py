@@ -19,7 +19,7 @@ async def test_create_source(db_session: AsyncSession):
     )
 
     # When
-    saved_source = await repo.create(source_data)
+    saved_source = await repo.create(**source_data.model_dump(exclude_unset=True))
 
     # Then
     assert saved_source.id is not None
@@ -107,7 +107,7 @@ async def test_update_source(db_session: AsyncSession):
     update_data = SourceUpdate(name="New Awesome Name", type=None)
 
     # When
-    updated_source = await repo.update(source, update_data)
+    updated_source = await repo.update(source, **update_data.model_dump())
 
     # Then
     assert updated_source.name == "New Awesome Name"
