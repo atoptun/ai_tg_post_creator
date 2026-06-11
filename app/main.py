@@ -1,10 +1,10 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi_pagination import add_pagination
 
 from app.config import settings
 from app.utils.logger import logger
-from app.db import postgres_engine, Base
-
+from app.api.routers import api_router
 
 logger = logger.getChild("main")
 
@@ -21,7 +21,11 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down...")
 
 
-app = FastAPI(lifespan=lifespan) 
+app = FastAPI(lifespan=lifespan)
+
+app.include_router(api_router)
+
+add_pagination(app)
 
 
 @app.get("/")

@@ -82,6 +82,8 @@ services:
           path: ./uv.lock
 
   postgres:
+    environment:
+      - POSTGRES_INITDB_ARGS=--username=${POSTGRES_USER}
     ports:
       - "5433:5432"
 
