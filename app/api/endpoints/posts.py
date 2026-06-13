@@ -19,6 +19,16 @@ async def list_posts(
     return await post_repo.get_paginated_posts(params=params)
 
 
+@router.delete("/{post_id}", status_code=204)
+async def delete_post(post_id: int, post_repo: PostRepoDep):
+    """Delete a specific post."""
+    post = await post_repo.get_by_id(post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    await post_repo.delete(post)
+
+
 @router.get("/errors/", response_model=Page[PostOut])
 async def list_failed_posts(
     post_repo: PostRepoDep,

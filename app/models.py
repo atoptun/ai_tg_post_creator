@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from sqlalchemy import ForeignKey, String, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
 
@@ -16,6 +16,13 @@ class Source(Base):
     enabled: Mapped[bool] = mapped_column(default=True)
 
 
+class Keyword(Base):
+    __tablename__ = "keywords"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    word: Mapped[str] = mapped_column(String(255), unique=True)
+
+
 class NewsItem(Base):
     __tablename__ = "news_items"
 
@@ -27,20 +34,21 @@ class NewsItem(Base):
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     raw_text: Mapped[Optional[str]]
 
-
-class Keyword(Base):
-    __tablename__ = "keywords"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    word: Mapped[str] = mapped_column(String(255), unique=True)
+    posts: Mapped[List["Post"]] = relationship(
+        "Post", back_populates="news_item", cascade="all, delete-orphan"
+    )
 
 
 class Post(Base):
     __tablename__ = "posts"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    news_id: Mapped[int] = mapped_column(ForeignKey("news_items.id"))
+    news_id: Mapped[int] = mapped_column(
+        ForeignKey("news_items.id", name="posts_news_id_fkey", ondelete="CASCADE")
+    )
     generated_text: Mapped[str]
     published_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="new")
     # status values: new / generated / published / failed
+
+    news_item: Mapped["NewsItem"] = relationship("NewsItem", back_populates="posts")

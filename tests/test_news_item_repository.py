@@ -3,9 +3,9 @@ import pytest
 from faker import Faker
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
-from fastapi_pagination import Params, pagination_ctx
+from fastapi_pagination import Params
 
-from app.models import NewsItem
+# from app.models import NewsItem
 from app.repositories.news_item import NewsItemRepository
 
 
@@ -263,3 +263,5 @@ async def test_get_sorted_paginated_list_slices(db_session: AsyncSession, faker:
     assert len(page.items) == 2
     assert page.items[0].title == "News 2"
     assert page.items[1].title == "News 3"
+
+

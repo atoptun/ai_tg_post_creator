@@ -2,8 +2,10 @@ from datetime import datetime, timezone, timedelta
 import pytest
 from httpx import AsyncClient
 from faker import Faker
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models import NewsItem
+
+from app.models import NewsItem, Post
 
 
 @pytest.mark.asyncio
@@ -103,3 +105,45 @@ async def test_api_delete_news_not_found(client: AsyncClient):
     # Then
     assert response.status_code == 404
     assert response.json()["detail"] == "News not found"
+
+
+@pytest.mark.asyncio
+async def test_api_delete_news_triggers_cascade_on_posts(
+    client: AsyncClient, db_session: AsyncSession, faker: Faker
+):
+    """Ensure that deleting a NewsItem automatically purges all its dependent Posts."""
+    # Given: Create a NewsItem
+    news = NewsItem(
+        title="Main News Article",
+        url=faker.unique.url(),
+        source="Telegram Parser",
+        published_at=datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+    db_session.add(news)
+    await db_session.commit()
+    await db_session.refresh(news)
+
+    # Seed 2 posts linked to this specific news item
+    post_1 = Post(news_id=news.id, generated_text="Post variant A", status="published")
+    post_2 = Post(news_id=news.id, generated_text="Post variant B", status="failed")
+    db_session.add_all([post_1, post_2])
+    await db_session.commit()
+
+    # When: Call the API endpoint to delete the parent NewsItem
+    response = await client.delete(f"/api/news/{news.id}")
+
+    # Then: News deletion must be successful (204)
+    assert response.status_code == 204
+
+    # Verify the NewsItem is completely gone
+    news_check = await db_session.execute(
+        select(NewsItem).where(NewsItem.id == news.id)
+    )
+    assert news_check.scalar_one_or_none() is None
+
+    # Verify that both associated posts were purged by database cascade
+    post_check_1 = await db_session.execute(select(Post).where(Post.id == post_1.id))
+    post_check_2 = await db_session.execute(select(Post).where(Post.id == post_2.id))
+
+    assert post_check_1.scalar_one_or_none() is None
+    assert post_check_2.scalar_one_or_none() is None
