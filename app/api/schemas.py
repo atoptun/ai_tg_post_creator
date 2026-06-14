@@ -91,3 +91,19 @@ class GenerateResponse(BaseModel):
     news_id: int
     generated_text: str
     status: str
+
+
+class QueueDispatchResponse(BaseModel):
+    status: str
+    news_id: Optional[int] = None
+    post_id: Optional[int] = None
+
+
+class MonitoringSummary(BaseModel):
+    sources_total: int
+    sources_enabled: int
+    keywords_total: int
+    news_items_total: int
+    posts_total: int
+    posts_by_status: dict[str, int]
+    recent_failed_posts: list[PostOut]

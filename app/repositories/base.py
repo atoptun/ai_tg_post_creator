@@ -57,3 +57,8 @@ class BaseRepository(Generic[ModelType]):
         """Returns a paginated list for the target model using async pagination context."""
         query = select(self.model)
         return await apaginate(self.db, query, params=params)
+
+    async def get_list(self) -> list[ModelType]:
+        """Returns all records for the target model without pagination."""
+        result = await self.db.scalars(select(self.model))
+        return list(result.all())

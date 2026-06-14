@@ -1,44 +1,48 @@
-from contextlib import asynccontextmanager
-from faststream import FastStream, Context, ContextRepo
+# import logging
+from faststream import FastStream, Context, Logger
 from faststream.rabbit import RabbitBroker, RabbitRouter
 
 from app.config import settings
 from app.utils.logger import logger
+from app.tasks.pipeline import router as pipeline_router
+from app.tasks.telegram_publish import router as telegram_publish_router
 
 
 logger = logger.getChild("stream_app")
-
-
-@asynccontextmanager
-async def lifespan(context: ContextRepo):
-    logger.info("Starting FastStream application...")
-    yield
-    logger.info("Shutting down FastStream application...")
 
 
 broker = RabbitBroker(settings.rabbitmq_url)
 router = RabbitRouter()
 
 broker.include_router(router)
-app = FastStream(broker, lifespan=lifespan)
+broker.include_router(pipeline_router)
+broker.include_router(telegram_publish_router)
+app = FastStream(broker)
+
+inQueuePublisher = broker.publisher("in-queue")
 
 
 @app.on_startup
 async def startup(worker_id: int | None = Context(default=None)) -> None:
     logger.info(f"Worker {worker_id} started")
+    pass
 
 
 @app.on_shutdown
 async def shutdown(worker_id: int | None = Context(default=None)) -> None:
     logger.info(f"Worker {worker_id} stopped")
+    pass
 
 
-@broker.subscriber("test-queue")
-async def base_handler(msg_body: int):
-    logger.info(f"Received message: {msg_body}")
-
-@broker.subscriber("test-user-queue")
-async def user_handler(user_id: int, name: str):
-    logger.info(f"Received user message: {user_id} - {name}")
+@app.after_startup
+async def test():
+    await inQueuePublisher.publish(
+        message={"user": "John", "user_id": 1},
+    )
 
 
+@broker.subscriber("in-queue")
+# @broker.publisher("out-queue")
+async def handle_msg(user: str, user_id: int, logger: Logger) -> None:
+    logger.info(f"Processing message for user: {user_id} - {user}")
+    # return f"User: {user_id} - {user} registered"

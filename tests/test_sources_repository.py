@@ -10,6 +10,16 @@ from app.repositories.source import SourceRepository
 
 
 @pytest.mark.asyncio
+async def test_seed_test_source_fixture(test_source: Source):
+    """Ensure the shared test source fixture seeds a stable enabled site source."""
+    assert test_source.id is not None
+    assert test_source.name == "Test News Site"
+    assert test_source.type == "site"
+    assert test_source.url == "https://example.com"
+    assert test_source.enabled is True
+
+
+@pytest.mark.asyncio
 async def test_create_source(db_session: AsyncSession):
     """Ensure the repository successfully creates and saves a source to the DB."""
     # Given
@@ -111,9 +121,7 @@ async def test_update_source(db_session: AsyncSession):
 
     # Then
     assert updated_source.name == "New Awesome Name"
-    assert (
-        updated_source.type == "site"
-    )
+    assert updated_source.type == "site"
 
 
 @pytest.mark.asyncio

@@ -81,6 +81,38 @@ services:
         - action: rebuild
           path: ./uv.lock
 
+  scheduler:
+    build:
+      context: .
+      target: development
+    restart: on-failure
+    command: >
+      uv run watchfiles 
+      --target-type command 
+      "python -m debugpy --listen 0.0.0.0:5678 -m taskiq scheduler app.scheduler:scheduler" 
+      /app/app
+    # uv run watchfiles "taskiq scheduler app.scheduler:scheduler" /app/app
+    ports:
+      - "5680:5678" # debugpy
+    environment:
+      - LOG_FILE=/app/logs/scheduler.log
+    volumes:
+      - ./logs/dev:/app/logs
+    develop:
+      watch:
+        - action: sync
+          path: ./app
+          target: /app/app
+          ignore:
+            - .git/
+            - .venv/
+            - .vscode/
+            - .docker_data/
+            - logs/
+        - action: rebuild
+          path: ./uv.lock
+
+
   postgres:
     environment:
       - POSTGRES_INITDB_ARGS=--username=${POSTGRES_USER}

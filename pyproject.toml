@@ -15,7 +15,10 @@ dependencies = [
     "fastapi[standard]>=0.136.3",
     "faststream[cli,rabbit]>=0.7.1",
     "gunicorn>=26.0.0",
+    "lxml>=6.1.1",
+    "openai>=2.41.1",
     "sqlalchemy>=2.0.50",
+    "taskiq-faststream>=0.4.1",
     "telethon>=1.43.2",
 ]
 
@@ -26,6 +29,7 @@ dev = [
     "pytest>=9.0.3",
     "pytest-asyncio>=1.4.0",
     "pytest-env>=1.6.0",
+    "watchfiles>=1.1.1",
 ]
 
 [tool.pytest.ini_options]

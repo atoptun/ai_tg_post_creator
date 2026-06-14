@@ -25,6 +25,13 @@ class Settings(BaseSettings):
     RABBITMQ_USER: str
     RABBITMQ_PASS: str
 
+    OPENAI_API_KEY: str
+
+    TELEGRAM_API_ID: int = 0
+    TELEGRAM_API_HASH: str = ""
+    TELEGRAM_SESSION: str = ""
+    TELEGRAM_CHANNEL: str = ""
+
     @property
     def postgres_url(self) -> str:
         return (
@@ -38,5 +45,6 @@ class Settings(BaseSettings):
             f"amqp://{self.RABBITMQ_USER}:{self.RABBITMQ_PASS}"
             f"@{self.RABBITMQ_HOST}:{self.RABBITMQ_PORT}//"
         )
+
 
 settings = Settings(_env_file=os.getenv("ENV", ".env"))  # type: ignore

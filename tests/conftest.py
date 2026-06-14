@@ -10,6 +10,7 @@ from app.db import Base
 from app.config import settings
 from app.main import app
 from app.db import get_db
+from app.seed import seed_test_source
 
 
 @pytest.fixture(scope="session")
@@ -63,6 +64,13 @@ async def db_session(test_engine_setup) -> AsyncIterator[AsyncSession]:
     async with session_factory() as session:
         yield session
         await session.rollback()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def test_source(db_session: AsyncSession):
+    """Provide a stable enabled site source for tests that need scheduler input."""
+    return await seed_test_source(db_session)
+
 
 # API
 

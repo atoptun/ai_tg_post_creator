@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page, Params
 
-from app.api.schemas import NewsItemOut
+from app.api.schemas import NewsItemOut, QueueDispatchResponse
+from app.tasks.pipeline import generate_publisher
 from app.repositories.news_item import NewsItemRepoDep
 
 
@@ -30,3 +31,16 @@ async def delete_news(news_id: int, news_repo: NewsItemRepoDep):
         raise HTTPException(status_code=404, detail="News not found")
 
     await news_repo.delete(news)
+
+
+@router.post(
+    "/{news_id}/generate", response_model=QueueDispatchResponse, status_code=202
+)
+async def manual_generate(news_id: int, news_repo: NewsItemRepoDep):
+    """Manually enqueue a news item for AI generation."""
+    news = await news_repo.get_by_id(news_id)
+    if not news:
+        raise HTTPException(status_code=404, detail="News not found")
+
+    await generate_publisher.publish(message={"news_id": news_id})
+    return QueueDispatchResponse(status="queued", news_id=news_id)

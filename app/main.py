@@ -13,10 +13,8 @@ async def lifespan(app: FastAPI):
     # Startup code
     logger.info("Starting up...")
 
-    # async with postgres_engine.begin() as conn:
-    #     await conn.run_sync(Base.metadata.create_all)
-
     yield
+    
     # Shutdown code
     logger.info("Shutting down...")
 

@@ -8,7 +8,7 @@ endif
 LOCAL_DB_HOST=127.0.0.1
 LOCAL_DB_PORT=5433
 
-.PHONY: help db-migrate db-upgrade doc-migrate doc-upgrade doc-current doc-history
+.PHONY: help db-migrate db-upgrade db-seed-test-source doc-migrate doc-upgrade doc-current doc-history
 
 help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -58,6 +58,9 @@ db-migrate: ## Generate a local migration script (Usage: make db-migrate m="migr
 
 db-upgrade: ## Apply all pending migrations to the local database
 	POSTGRES_HOST=$(LOCAL_DB_HOST) POSTGRES_PORT=$(LOCAL_DB_PORT) uv run alembic upgrade head
+
+db-seed-test-source: ## Seed a stable enabled site source into the local database
+	POSTGRES_HOST=$(LOCAL_DB_HOST) POSTGRES_PORT=$(LOCAL_DB_PORT) uv run python -m app.seed
 
 db-current: ## Display the current migration revision of the Docker database
 	POSTGRES_HOST=$(LOCAL_DB_HOST) POSTGRES_PORT=$(LOCAL_DB_PORT) uv run alembic current
