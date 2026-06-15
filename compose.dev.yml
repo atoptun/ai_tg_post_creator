@@ -12,9 +12,9 @@ services:
     restart: on-failure
     command: >
       sh -c "uv run alembic upgrade head && 
-             uv run python -m debugpy --listen 0.0.0.0:5678 -m fastapi dev --host 0.0.0.0 app/main.py"
-# uv run python -m debugpy --listen 0.0.0.0:5678 -m 
-# fastapi dev --host 0.0.0.0 app/main.py
+             uv run python -m debugpy --listen 0.0.0.0:5678 -m fastapi dev --host 0.0.0.0 app/api_app.py"
+    # uv run python -m debugpy --listen 0.0.0.0:5678 -m 
+    # fastapi dev --host 0.0.0.0 app/api_app.py
     ports:
       - "8000:8000" # fastapi
       - "5678:5678" # debugpy
@@ -47,26 +47,26 @@ services:
             - .git/
             - .venv/
             - .vscode/
-            - .docker_data/
             - logs/
         # Rebuild the image if dependencies change by checking uv.lock
         - action: rebuild
           path: ./uv.lock
 
-  stream_worker:
+  worker:
     build:
       context: .
       target: development
     restart: on-failure
     command: >
-      uv run python -m debugpy --listen 0.0.0.0:5679 -m 
-      faststream run app.stream_app:app --workers 1 --reload
+      uv run python -m debugpy --listen 0.0.0.0:5678 -m  faststream run app.worker_app:app --workers 1 --reload
     ports:
-      - "5679:5679" # debugpy
+      - "5679:5678" # debugpy
     environment:
-      - LOG_FILE=/app/logs/stream.log
+      - LOG_FILE=/app/logs/worker.log
     volumes:
       - ./logs/dev:/app/logs
+      - /app/.venv/
+      - /root/.cache/uv/
     develop:
       watch:
         - action: sync
@@ -76,7 +76,6 @@ services:
             - .git/
             - .venv/
             - .vscode/
-            - .docker_data/
             - logs/
         - action: rebuild
           path: ./uv.lock
@@ -87,17 +86,17 @@ services:
       target: development
     restart: on-failure
     command: >
-      uv run watchfiles 
-      --target-type command 
-      "python -m debugpy --listen 0.0.0.0:5678 -m taskiq scheduler app.scheduler:scheduler" 
-      /app/app
-    # uv run watchfiles "taskiq scheduler app.scheduler:scheduler" /app/app
+      uv run watchfiles  --target-type command  
+      "uv run python -m debugpy --listen 0.0.0.0:5678 -m taskiq scheduler app.scheduler_app:scheduler"  /app/app
+    # uv run watchfiles "taskiq scheduler app.scheduler_app:scheduler" /app/app
     ports:
       - "5680:5678" # debugpy
     environment:
       - LOG_FILE=/app/logs/scheduler.log
     volumes:
       - ./logs/dev:/app/logs
+      - /app/.venv/
+      - /root/.cache/uv/
     develop:
       watch:
         - action: sync
@@ -107,11 +106,9 @@ services:
             - .git/
             - .venv/
             - .vscode/
-            - .docker_data/
             - logs/
         - action: rebuild
           path: ./uv.lock
-
 
   postgres:
     environment:

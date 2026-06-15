@@ -21,7 +21,7 @@ doc-start-dev: ## Start the development environment with hot-reloading
 	docker compose -p ai_tg_dev --env-file .env -f compose.yml -f compose.dev.yml up --build --watch
 
 doc-stop-dev: ## Stop the development environment
-	docker compose -p ai_tg_dev down
+	docker compose -p ai_tg_dev --env-file .env -f compose.yml -f compose.dev.yml down --remove-orphans
 
 doc-logs-dev: ## View container logs (Usage: make doc-logs-dev api)
 	@# Filter out the command name itself, leaving only the container name

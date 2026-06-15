@@ -9,23 +9,31 @@ services:
       target: production
     # command: fastapi run --host 0.0.0.0 --port 8000 --workers 4
     command: >
-      gunicorn app.main:app 
+      gunicorn app.api_app:app 
       --workers 1 
       --worker-class uvicorn.workers.UvicornWorker 
       --bind 0.0.0.0:8000 
-      --timeout 120
-      --error-logfile -
+      --timeout 120 
+      --error-logfile - 
       --access-logfile -
     volumes:
       - ./logs/prod:/app/logs
 
-  stream_worker:
+  worker:
     build:
       context: .
       target: production
-    command: faststream run app.stream_app:app
+    command: faststream run app.worker_app:app
     volumes:
       - ./logs/prod:/app/logs
+
+  scheduler:
+    build:
+      context: .
+      target: production
+    restart: on-failure
+    command: >
+      uv run taskiq scheduler app.scheduler_app:scheduler
 
   rabbitmq:
     environment:

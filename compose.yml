@@ -30,17 +30,17 @@ services:
     healthcheck:
       # test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       # test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8000/health"]
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)" ]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 5s
 
-  stream_worker:
+  worker:
     build: .
     environment:
-      - LOG_NAME=stream_worker
-      # - LOG_FILE=/app/logs/stream_worker.log
+      - LOG_NAME=worker
+      # - LOG_FILE=/app/logs/worker.log
     env_file:
       - .env
     # volumes:
@@ -74,7 +74,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -101,7 +101,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq/mnesia
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -111,7 +111,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -121,5 +121,4 @@ volumes:
   pg_data:
   pgadmin_data:
   rabbitmq_data:
-  redis_data:
-  # stream_docs_static:
+  redis_data: # stream_docs_static:
