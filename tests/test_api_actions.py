@@ -4,8 +4,7 @@ import pytest
 from httpx import AsyncClient
 
 from app.models import Keyword, NewsItem, Post, Source
-from app.api.endpoints import news as news_endpoint
-from app.api.endpoints import posts as posts_endpoint
+from app.api.endpoints import trigers
 
 
 @pytest.mark.asyncio
@@ -27,9 +26,9 @@ async def test_api_manual_generate_queues_news_id(
     async def fake_publish(*, message: dict):
         published_messages.append(message)
 
-    monkeypatch.setattr(news_endpoint.generate_publisher, "publish", fake_publish)
+    monkeypatch.setattr(trigers.generate_publisher, "publish", fake_publish)
 
-    response = await client.post(f"/api/news/{news.id}/repost")
+    response = await client.post(f"/api/trigger/repost/{news.id}")
 
     assert response.status_code == 202
     data = response.json()
@@ -62,9 +61,9 @@ async def test_api_retry_publish_post_queues_post_id(
     async def fake_publish(*, message: dict):
         published_messages.append(message)
 
-    monkeypatch.setattr(posts_endpoint.publish_publisher, "publish", fake_publish)
+    monkeypatch.setattr(trigers.publish_publisher, "publish", fake_publish)
 
-    response = await client.post(f"/api/posts/{post.id}/retry-publish")
+    response = await client.post(f"/api/trigger/republish/{post.id}")
 
     assert response.status_code == 202
     data = response.json()
