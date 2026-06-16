@@ -27,19 +27,12 @@ class NewsItem(Base):
     __tablename__ = "news_items"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str] = mapped_column(String(512))
-    url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    title: Mapped[str] = mapped_column(String(512), unique=True)
+    url: Mapped[Optional[str]] = mapped_column(String(512), unique=True, nullable=True)
     summary: Mapped[Optional[str]]
     source: Mapped[str] = mapped_column(String(255))
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     raw_text: Mapped[Optional[str]]
-
-    __table_args__ = (
-        UniqueConstraint("source", "title", name="uq_news_items_source_title"),
-        UniqueConstraint("source", "url", name="uq_news_items_source_url"),
-        Index("ix_news_items_published_at", "published_at"),
-        Index("ix_news_items_source", "source"),
-    )
 
     posts: Mapped[List["Post"]] = relationship(
         "Post", back_populates="news_item", cascade="all, delete-orphan"
@@ -57,7 +50,5 @@ class Post(Base):
     published_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="new")
     # status values: new / generated / published / failed
-
-    __table_args__ = (Index("ix_posts_status", "status"),)
 
     news_item: Mapped["NewsItem"] = relationship("NewsItem", back_populates="posts")

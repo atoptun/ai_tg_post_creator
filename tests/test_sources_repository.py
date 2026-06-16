@@ -13,9 +13,9 @@ from app.repositories.source import SourceRepository
 async def test_seed_test_source_fixture(test_source: Source):
     """Ensure the shared test source fixture seeds a stable enabled site source."""
     assert test_source.id is not None
-    assert test_source.name == "Test News Site"
+    assert test_source.name == "Liga News Site"
     assert test_source.type == "site"
-    assert test_source.url == "https://example.com"
+    assert test_source.url == "https://www.liga.net/ua"
     assert test_source.enabled is True
 
 

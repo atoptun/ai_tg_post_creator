@@ -26,11 +26,14 @@ class Settings(BaseSettings):
     RABBITMQ_PASS: str
 
     OPENAI_API_KEY: str
+    OPENAI_MODEL: str = "gpt-4o"
+    OPENAI_MODEL_TEMPERATURE: float = 0.7
 
-    TELEGRAM_API_ID: int = 0
-    TELEGRAM_API_HASH: str = ""
-    TELEGRAM_SESSION: str = ""
-    TELEGRAM_CHANNEL: str = ""
+    TG_API_ID: int = 0
+    TG_API_HASH: str = ""
+    TG_SESSION_NAME: str = ""
+    TG_PUBLISH_CHANNEL: int = 0
+    TG_BOT_API_KEY: str = ""
 
     @property
     def postgres_url(self) -> str:

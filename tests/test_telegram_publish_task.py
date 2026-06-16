@@ -10,7 +10,7 @@ from app.tasks import telegram_publish
 
 
 @pytest.mark.asyncio
-async def test_handle_publish_post_marks_post_published(
+async def test_task_publish_post_marks_post_published(
     db_session: AsyncSession, monkeypatch
 ):
     """Telegram publish worker should send the post text and mark the row published."""
@@ -51,7 +51,7 @@ async def test_handle_publish_post_marks_post_published(
     )
     monkeypatch.setattr(telegram_publish, "AsyncSessionLocal", fake_session_local)
 
-    await telegram_publish.handle_publish_post(post.id)
+    await telegram_publish.task_publish_post(post.id)
 
     result = await db_session.execute(select(Post))
     saved_post = result.scalars().one()

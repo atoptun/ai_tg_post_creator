@@ -11,10 +11,10 @@ logger = logger.getChild("telegram_publisher")
 def is_telegram_publish_enabled() -> bool:
     return all(
         [
-            settings.TELEGRAM_API_ID,
-            settings.TELEGRAM_API_HASH,
-            settings.TELEGRAM_SESSION,
-            settings.TELEGRAM_CHANNEL,
+            settings.TG_API_ID,
+            settings.TG_API_HASH,
+            settings.TG_SESSION_NAME,
+            settings.TG_PUBLISH_CHANNEL,
         ]
     )
 
@@ -28,12 +28,17 @@ async def publish_post_to_telegram(message_text: str) -> bool:
         return False
 
     client = TelegramClient(
-        StringSession(settings.TELEGRAM_SESSION),
-        settings.TELEGRAM_API_ID,
-        settings.TELEGRAM_API_HASH,
+        settings.TG_SESSION_NAME,
+        settings.TG_API_ID,
+        settings.TG_API_HASH,
     )
 
-    async with client:
-        await client.send_message(settings.TELEGRAM_CHANNEL, message_text)
+    await client.start(bot_token=settings.TG_BOT_API_KEY) #type: ignore
+    logger.info("Starting Client")
+    try:
+        message = await client.send_message(settings.TG_PUBLISH_CHANNEL, message_text)
+        logger.info(f"Published message with id {message.id} to channel {settings.TG_PUBLISH_CHANNEL}")
+    finally:
+        await client.disconnect() #type: ignore
 
     return True

@@ -1,8 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi_pagination import Page, Params
 
 from app.api.schemas import SourceCreate, SourceUpdate, SourceOut
 from app.repositories.source import SourceRepoDep
+from app.news_parsers.sites import parse_site
+from app.news_parsers.telegram import parse_telegram_channel
+from faststream.rabbit import RabbitBroker
+from app.config import settings
 
 
 router = APIRouter(prefix="/sources", tags=["Sources"])
@@ -45,5 +49,3 @@ async def delete_source(source_id: int, source_repo: SourceRepoDep):
     if not source:
         raise HTTPException(status_code=404, detail="Source not found")
     await source_repo.delete(source)
-
-

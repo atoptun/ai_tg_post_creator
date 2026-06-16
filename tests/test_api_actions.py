@@ -29,13 +29,13 @@ async def test_api_manual_generate_queues_news_id(
 
     monkeypatch.setattr(news_endpoint.generate_publisher, "publish", fake_publish)
 
-    response = await client.post(f"/api/news/{news.id}/generate")
+    response = await client.post(f"/api/news/{news.id}/repost")
 
     assert response.status_code == 202
     data = response.json()
     assert data["status"] == "queued"
     assert data["news_id"] == news.id
-    assert published_messages == [{"news_id": news.id}]
+    assert published_messages == [news.id]
 
 
 @pytest.mark.asyncio
@@ -70,7 +70,7 @@ async def test_api_retry_publish_post_queues_post_id(
     data = response.json()
     assert data["status"] == "queued"
     assert data["post_id"] == post.id
-    assert published_messages == [{"post_id": post.id}]
+    assert published_messages == [post.id]
 
 
 @pytest.mark.asyncio

@@ -23,6 +23,13 @@ doc-start-dev: ## Start the development environment with hot-reloading
 doc-stop-dev: ## Stop the development environment
 	docker compose -p ai_tg_dev --env-file .env -f compose.yml -f compose.dev.yml down --remove-orphans
 
+doc-restart-dev: ## Restart container (Usage: make doc-restart-dev api)
+	@# Filter out the command name itself, leaving only the container name
+	$(eval CONTAINER := $(filter-out doc-restart-dev,$(MAKECMDGOALS)))
+	@# If no container was provided, default to 'api'
+	$(eval CONTAINER_NAME := $(if $(CONTAINER),$(CONTAINER),api))
+	docker compose -p ai_tg_dev restart  $(CONTAINER_NAME)
+
 doc-logs-dev: ## View container logs (Usage: make doc-logs-dev api)
 	@# Filter out the command name itself, leaving only the container name
 	$(eval CONTAINER := $(filter-out doc-logs-dev,$(MAKECMDGOALS)))

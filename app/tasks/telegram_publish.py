@@ -15,7 +15,7 @@ publish_publisher = router.publisher("publish-telegram-queue")
 
 
 @router.subscriber("publish-telegram-queue")
-async def handle_publish_post(post_id: int) -> None:
+async def task_publish_post(post_id: int) -> None:
     """Send a generated post to Telegram and mark it published."""
     logger.info(f"Telegram publish request received for post_id={post_id}")
 

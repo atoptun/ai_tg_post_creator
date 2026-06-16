@@ -11,9 +11,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.config import settings
 from app.models import Keyword, NewsItem, Post
 from app.repositories.keywords import KeywordRepository
-from app.scheduler import scheduled_parse_sites
-from app.stream_app import broker
-from app.tasks import pipeline
+from app.scheduler_app import scheduled_parse_sites
+from app.worker_app import broker
+from app.tasks import filter, generator
 
 
 @pytest.mark.asyncio
@@ -33,7 +33,7 @@ async def test_scheduler_batch_reaches_pipeline_and_routes_news_id(monkeypatch):
 
     published_messages: list[dict] = []
 
-    async def fake_load_keywords():
+    async def fake_load_keywords(*args, **kwargs):
         return []
 
     async def fake_publish(*, message: dict):
@@ -42,18 +42,18 @@ async def test_scheduler_batch_reaches_pipeline_and_routes_news_id(monkeypatch):
     async def fake_create(self, **kwargs):
         return SimpleNamespace(id=1, **kwargs)
 
-    async def fake_parse_sites_task(source_repo) -> AsyncIterator[list[dict]]:
+    async def fake_task_parse_sites(source_repo) -> AsyncIterator[list[dict]]:
         yield raw_items
 
     @asynccontextmanager
     async def fake_repo_context(repo_class, *args, **kwargs):
         yield SimpleNamespace()
 
-    monkeypatch.setattr(pipeline, "_load_keywords", fake_load_keywords)
-    monkeypatch.setattr(pipeline.generate_publisher, "publish", fake_publish)
-    monkeypatch.setattr(pipeline.NewsItemRepository, "create", fake_create)
-    monkeypatch.setattr("app.scheduler.parse_sites_task", fake_parse_sites_task)
-    monkeypatch.setattr("app.scheduler.repo_context", fake_repo_context)
+    monkeypatch.setattr(filter, "_load_keywords", fake_load_keywords)
+    monkeypatch.setattr(filter.generate_publisher, "publish", fake_publish)
+    monkeypatch.setattr(filter.NewsItemRepository, "create", fake_create)
+    monkeypatch.setattr("app.scheduler_app.task_parse_sites", fake_task_parse_sites)
+    monkeypatch.setattr("app.scheduler_app.repo_context", fake_repo_context)
 
     batches = []
     async for batch in scheduled_parse_sites():
@@ -63,9 +63,9 @@ async def test_scheduler_batch_reaches_pipeline_and_routes_news_id(monkeypatch):
 
     async with TestRabbitBroker(broker, with_real=False) as br:
         await br.publish(batches[0], "filter-news-queue")
-        await pipeline.handle_raw_items.wait_call(timeout=5)
+        await filter.task_filter_news.wait_call(timeout=5)
 
-    assert published_messages == [{"news_id": 1}]
+    assert published_messages == [1]
 
 
 @pytest.mark.asyncio
@@ -81,14 +81,14 @@ async def test_filter_news_queue_real_db_smoke_skips_non_matching_items(
     async def fake_session_local():
         yield db_session
 
-    monkeypatch.setattr(pipeline, "AsyncSessionLocal", fake_session_local)
+    monkeypatch.setattr(filter, "AsyncSessionLocal", fake_session_local)
 
-    async def fake_load_keywords():
-        keyword_repo = KeywordRepository(db_session)
+    async def fake_load_keywords(db, *args, **kwargs):
+        keyword_repo = KeywordRepository(db)
         keywords = await keyword_repo.get_list()
         return [keyword.word.lower() for keyword in keywords]
 
-    monkeypatch.setattr(pipeline, "_load_keywords", fake_load_keywords)
+    monkeypatch.setattr(filter, "_load_keywords", fake_load_keywords)
 
     raw_items = [
         {
@@ -101,7 +101,7 @@ async def test_filter_news_queue_real_db_smoke_skips_non_matching_items(
         }
     ]
 
-    await pipeline.handle_raw_items(raw_items)
+    await filter.task_filter_news(raw_items)
 
     news_count = await db_session.scalar(select(func.count()).select_from(NewsItem))
 
@@ -138,10 +138,11 @@ async def test_filter_news_queue_real_db_smoke_persists_news_and_post(
                 await session.close()
                 await engine.dispose()
 
-    monkeypatch.setattr(pipeline, "generate_post_text", fake_generate_post_text)
-    monkeypatch.setattr(pipeline, "AsyncSessionLocal", real_session_local)
-    monkeypatch.setattr(pipeline.generate_publisher, "publish", fake_publish)
-    monkeypatch.setattr(pipeline.publish_publisher, "publish", fake_publish)
+    monkeypatch.setattr(generator, "generate_post_text", fake_generate_post_text)
+    monkeypatch.setattr(filter, "AsyncSessionLocal", real_session_local)
+    monkeypatch.setattr(generator, "AsyncSessionLocal", real_session_local)
+    monkeypatch.setattr(filter.generate_publisher, "publish", fake_publish)
+    monkeypatch.setattr(generator.publish_publisher, "publish", fake_publish)
 
     raw_items = [
         {
@@ -154,17 +155,17 @@ async def test_filter_news_queue_real_db_smoke_persists_news_and_post(
         }
     ]
 
-    await pipeline.handle_raw_items(raw_items)
+    await filter.task_filter_news(raw_items)
 
     news_count = await db_session.scalar(select(func.count()).select_from(NewsItem))
 
     assert news_count == 1
-    assert published_messages == [{"news_id": 1}]
+    assert published_messages == [1]
 
     news_result = await db_session.execute(select(NewsItem))
     news_item = news_result.scalars().one()
 
-    await pipeline.handle_generate_post(news_item.id)
+    await generator.task_generate_post(news_item.id)
 
     post_count = await db_session.scalar(select(func.count()).select_from(Post))
     post_result = await db_session.execute(select(Post))

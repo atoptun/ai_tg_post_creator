@@ -8,7 +8,7 @@ from httpx import AsyncClient, ASGITransport
 
 from app.db import Base
 from app.config import settings
-from app.main import app
+from app.api_app import app
 from app.db import get_db
 from app.seed import seed_test_source
 

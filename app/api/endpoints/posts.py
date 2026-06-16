@@ -52,5 +52,5 @@ async def retry_publish_post(post_id: int, post_repo: PostRepoDep):
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    await publish_publisher.publish(message={"post_id": post_id})
+    await publish_publisher.publish(message=post_id)
     return QueueDispatchResponse(status="queued", post_id=post_id)
