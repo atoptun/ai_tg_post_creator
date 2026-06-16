@@ -2,17 +2,27 @@ services:
   nginx:
     volumes:
       - ./logs/dev/nginx:/var/log/nginx
+    depends_on:
+      - api
 
   api:
     build:
       context: .
       target: development
+    restart: on-failure
     command: >
-      uv run python -m debugpy --listen 0.0.0.0:5678 -m 
-      fastapi dev --host 0.0.0.0
+      sh -c "uv run alembic upgrade head && 
+             uv run python -m debugpy --listen 0.0.0.0:5678 -m fastapi dev --host 0.0.0.0 app/api_app.py"
+    # uv run python -m debugpy --listen 0.0.0.0:5678 -m 
+    # fastapi dev --host 0.0.0.0 app/api_app.py
     ports:
       - "8000:8000" # fastapi
       - "5678:5678" # debugpy
+    environment:
+      - LOG_FILE=/app/logs/api.log
+
+    healthcheck:
+      disable: true
 
     # Run as root during development so the environment is mutable
     # Alternatively, you could set `UV_PROJECT_ENVIRONMENT` to a path owned by the non-root user
@@ -37,75 +47,83 @@ services:
             - .git/
             - .venv/
             - .vscode/
-            - .docker_data/
             - logs/
         # Rebuild the image if dependencies change by checking uv.lock
         - action: rebuild
           path: ./uv.lock
 
-  celery_worker:
+  worker:
     build:
       context: .
       target: development
+    restart: on-failure
+    command: >
+      uv run python -m debugpy --listen 0.0.0.0:5678 -m  faststream run app.worker_app:app --workers 1 --reload
+    ports:
+      - "5679:5678" # debugpy
     environment:
-      - UV_NO_DEV=0
+      - LOG_FILE=/app/logs/worker.log
     volumes:
       - ./logs/dev:/app/logs
-
+      - /app/.venv/
+      - /root/.cache/uv/
     develop:
       watch:
-        - action: sync+restart
+        - action: sync
           path: ./app
           target: /app/app
+          ignore:
+            - .git/
+            - .venv/
+            - .vscode/
+            - logs/
         - action: rebuild
           path: ./uv.lock
 
-  celery_beat:
+  scheduler:
     build:
       context: .
       target: development
+    restart: on-failure
+    command: >
+      uv run python -m debugpy --listen 0.0.0.0:5678 -m 
+      taskiq scheduler app.scheduler_app:scheduler
+    # uv run watchfiles "taskiq scheduler app.scheduler_app:scheduler" /app/app
+    ports:
+      - "5680:5678" # debugpy
     environment:
-      - UV_NO_DEV=0
+      - LOG_FILE=/app/logs/scheduler.log
     volumes:
       - ./logs/dev:/app/logs
-
+      - /app/.venv/
+      - /root/.cache/uv/
     develop:
       watch:
-        - action: sync+restart
+        - action: sync
           path: ./app
           target: /app/app
-        - action: rebuild
-          path: ./uv.lock
-
-  flower:
-    build:
-      context: .
-      target: development
-    volumes:
-      - ./logs/dev:/app/logs
-
-    develop:
-      watch:
-        - action: sync+restart
-          path: ./app
-          target: /app/app
+          ignore:
+            - .git/
+            - .venv/
+            - .vscode/
+            - logs/
         - action: rebuild
           path: ./uv.lock
 
   postgres:
-    volumes:
-      - ./.docker_data/postgres:/var/lib/postgresql
+    environment:
+      - POSTGRES_INITDB_ARGS=--username=${POSTGRES_USER}
+    ports:
+      - "5433:5432"
 
-  pgadmin4:
-    volumes:
-      - ./.docker_data/pgadmin4:/var/lib/pgadmin
-      # - ./pgadmin4/servers.json:/pgadmin4/servers.json    
-      # - ./pgadmin4/preferences.json:/pgadmin4/preferences.json    
-
-  rabbitmq:
-    volumes:
-      - ./.docker_data/rabbitmq/mnesia:/var/lib/rabbitmq/mnesia
-
-  redis:
-    volumes:
-      - ./.docker_data/redis:/data
+volumes:
+  pg_data:
+    name: ai_tg_postgres_dev_data
+  pgadmin_data:
+    name: ai_tg_pgadmin_dev_data
+  rabbitmq_data:
+    name: ai_tg_rabbitmq_dev_data
+  redis_data:
+    name: ai_tg_redis_dev_data
+  # stream_docs_static:
+  #   name: ai_tg_stream_docs_static_dev_data

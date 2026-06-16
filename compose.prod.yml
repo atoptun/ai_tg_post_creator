@@ -9,55 +9,45 @@ services:
       target: production
     # command: fastapi run --host 0.0.0.0 --port 8000 --workers 4
     command: >
-      gunicorn app.main:app 
-      --workers 6 
+      gunicorn app.api_app:app 
+      --workers 1 
       --worker-class uvicorn.workers.UvicornWorker 
       --bind 0.0.0.0:8000 
-      --timeout 120
-      --error-logfile /app/logs/gunicorn_error.log
-      --access-logfile /app/logs/gunicorn_access.log
+      --timeout 120 
+      --error-logfile - 
+      --access-logfile -
     volumes:
       - ./logs/prod:/app/logs
 
-  celery_worker:
+  worker:
     build:
       context: .
       target: production
+    command: faststream run app.worker_app:app
     volumes:
       - ./logs/prod:/app/logs
 
-  celery_beat:
+  scheduler:
     build:
       context: .
       target: production
-    volumes:
-      - ./logs/prod:/app/logs
-
-  flower:
-    build:
-      context: .
-      target: production
-    volumes:
-      - ./logs/prod:/app/logs
-
-  postgres:
-    volumes:
-      - pg_data:/var/lib/postgresql
-
-  pgadmin4:
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
+    restart: on-failure
+    command: >
+      uv run taskiq scheduler app.scheduler_app:scheduler
 
   rabbitmq:
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq/mnesia
-
-  redis:
-    volumes:
-      - redis_data:/data
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
 
 volumes:
   pg_data:
+    name: ai_tg_postgres_prod_data
   pgadmin_data:
+    name: ai_tg_pgadmin_prod_data
   rabbitmq_data:
+    name: ai_tg_rabbitmq_prod_data
   redis_data:
+    name: ai_tg_redis_prod_data
+  # stream_docs_static:
+  #   name: ai_tg_stream_docs_static_prod_data

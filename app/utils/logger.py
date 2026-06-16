@@ -66,9 +66,9 @@ class ColoredFormatter(logging.Formatter):
         # Format level name (padded to 5 chars)
         level_name = f"{record.levelname:>5}"
 
-        # Format logger name (truncated to 20 chars)
-        logger_name = record.name[-20:] if len(
-            record.name) > 20 else record.name
+        # Format logger name (truncated to 30 chars)
+        logger_name = record.name[-30:] if len(
+            record.name) > 30 else record.name
 
         # Build the formatted message
         formatted = (
@@ -76,7 +76,7 @@ class ColoredFormatter(logging.Formatter):
             f"{level_color}{level_name}{Colors.RESET} "
             f"{Colors.FAINT}---{Colors.RESET} "
             f"{Colors.FAINT}[{Colors.RESET}"
-            f"{Colors.LOGGER_NAME}{logger_name:>20}{Colors.RESET}"
+            f"{Colors.LOGGER_NAME}{logger_name:>30}{Colors.RESET}"
             f"{Colors.FAINT}]{Colors.RESET} "
             f"{Colors.FAINT}:{Colors.RESET} "
             f"{record.getMessage()}"
@@ -96,10 +96,10 @@ class PlainFormatter(logging.Formatter):
         timestamp = datetime.fromtimestamp(
             record.created).strftime("%Y-%m-%d %H:%M:%S")
         level_name = f"{record.levelname:>5}"
-        logger_name = record.name[-20:] if len(
-            record.name) > 20 else record.name
+        logger_name = record.name[-30:] if len(
+            record.name) > 30 else record.name
 
-        formatted = f"{timestamp} {level_name} --- [{logger_name:>20}] : {record.getMessage()}"
+        formatted = f"{timestamp} {level_name} --- [{logger_name:>30}] : {record.getMessage()}"
 
         if record.exc_info:
             formatted += "\n" + self.formatException(record.exc_info)

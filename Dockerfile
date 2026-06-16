@@ -62,6 +62,9 @@ COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
 
+# Generate AsyncAPI documentation and place it in the shared volume for Nginx to serve
+# RUN uv run faststream docs gen --out /app/asyncapi_html app.stream_app:app
+
 # Use the non-root user to run our application
 USER nonroot
 

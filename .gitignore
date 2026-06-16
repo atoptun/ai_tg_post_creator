@@ -1,4 +1,7 @@
 .docker_data/
+telegram_session.session
+tg_user.session
+tg_bot.session
 
 
 # Byte-compiled / optimized / DLL files
@@ -148,6 +151,7 @@ activemq-data/
 
 # Environments
 .env
+.env.test
 .envrc
 .venv
 env/
