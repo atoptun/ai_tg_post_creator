@@ -15,12 +15,12 @@ async def _fetch_channel(channel_username: str, source_name: str, limit: int = 2
         return []
 
     client = TelegramClient(
-        settings.TG_SESSION_NAME or "telegram_session",
+        settings.TG_USER_SESSION_NAME,
         settings.TG_API_ID,
         settings.TG_API_HASH,
     )
     try:
-        await client.start(bot_token=settings.TG_BOT_API_KEY) #type: ignore
+        await client.start() #type: ignore
         async for message in client.iter_messages(channel_username, limit=limit):
             if not isinstance(message, Message) or not message.message:
                 continue
@@ -46,6 +46,6 @@ async def _fetch_channel(channel_username: str, source_name: str, limit: int = 2
 
 async def parse_telegram_channel(channel_username: str, source_name: str) -> list[dict]:
     """Parses recent messages from a Telegram channel and returns them in the same format as site parsing."""
-    # logger.warning("Telegram parsing is disabled (no credentials configured)")
-    # return []
-    return await _fetch_channel(channel_username, source_name)
+    logger.warning("Telegram parsing is disabled (no credentials configured)")
+    return []
+    # return await _fetch_channel(channel_username, source_name)

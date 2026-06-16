@@ -31,7 +31,8 @@ class Settings(BaseSettings):
 
     TG_API_ID: int = 0
     TG_API_HASH: str = ""
-    TG_SESSION_NAME: str = ""
+    TG_USER_SESSION_NAME: str = "tg_user"
+    TG_BOT_SESSION_NAME: str = "tg_bot"
     TG_PUBLISH_CHANNEL: int = 0
     TG_BOT_API_KEY: str = ""
 

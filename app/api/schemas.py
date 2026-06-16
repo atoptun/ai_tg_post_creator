@@ -95,6 +95,7 @@ class GenerateResponse(BaseModel):
 
 class QueueDispatchResponse(BaseModel):
     status: str
+    message: Optional[str] = None
     news_id: Optional[int] = None
     post_id: Optional[int] = None
 

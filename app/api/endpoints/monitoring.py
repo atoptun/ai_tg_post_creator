@@ -31,6 +31,7 @@ async def monitoring_summary(db: DbSessionDep):
         select(Post).where(Post.status == "failed").order_by(Post.id.desc()).limit(5)
     )
     recent_failed_posts = list(failed_posts_result.scalars().all())
+    recent_failed_posts = [PostOut.from_orm(post) for post in recent_failed_posts]
 
     return MonitoringSummary(
         sources_total=sources_total,

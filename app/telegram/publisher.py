@@ -13,7 +13,7 @@ def is_telegram_publish_enabled() -> bool:
         [
             settings.TG_API_ID,
             settings.TG_API_HASH,
-            settings.TG_SESSION_NAME,
+            settings.TG_BOT_SESSION_NAME,
             settings.TG_PUBLISH_CHANNEL,
         ]
     )
@@ -28,7 +28,7 @@ async def publish_post_to_telegram(message_text: str) -> bool:
         return False
 
     client = TelegramClient(
-        settings.TG_SESSION_NAME,
+        settings.TG_BOT_SESSION_NAME,
         settings.TG_API_ID,
         settings.TG_API_HASH,
     )

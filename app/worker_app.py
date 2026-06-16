@@ -7,9 +7,10 @@ from app.utils.logger import logger
 from app.tasks.filter import router as filter_router
 from app.tasks.generator import router as generator_router
 from app.tasks.telegram_publish import router as telegram_publish_router
+from app.tasks.parsers import router as parsers_router
 
 
-logger = logger.getChild("stream_app")
+logger = logger.getChild("app")
 
 
 broker = RabbitBroker(settings.rabbitmq_url)
@@ -17,6 +18,7 @@ broker = RabbitBroker(settings.rabbitmq_url)
 broker.include_router(filter_router)
 broker.include_router(generator_router)
 broker.include_router(telegram_publish_router)
+broker.include_router(parsers_router)
 
 app = FastStream(broker)
 

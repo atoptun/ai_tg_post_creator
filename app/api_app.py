@@ -14,23 +14,36 @@ logger = logger.getChild("main")
 async def lifespan(app: FastAPI):
     # Startup code
     logger.info("Starting up...")
-    from app.worker_app import broker
+    from app.worker_app import broker as worker_broker
+    from app.scheduler_app import broker as scheduler_broker
 
     try:
-        await broker.connect()
-        logger.info("FastStream broker connected")
+        await worker_broker.connect()
+        logger.info("FastStream worker broker connected")
     except Exception as e:
-        logger.error(f"Failed to connect FastStream broker: {e}")
+        logger.error(f"Failed to connect FastStream worker broker: {e}")
+
+    try:
+        await scheduler_broker.connect()
+        logger.info("FastStream scheduler broker connected")
+    except Exception as e:
+        logger.error(f"Failed to connect FastStream scheduler broker: {e}")
 
     yield
 
     # Shutdown code
     logger.info("Shutting down...")
     try:
-        await broker.stop()
-        logger.info("FastStream broker connection closed")
+        await worker_broker.stop()
+        logger.info("FastStream worker broker connection closed")
     except Exception as e:
-        logger.error(f"Failed to stop FastStream broker: {e}")
+        logger.error(f"Failed to stop FastStream worker broker: {e}")
+
+    try:
+        await scheduler_broker.stop()
+        logger.info("FastStream scheduler broker connection closed")
+    except Exception as e:
+        logger.error(f"Failed to stop FastStream scheduler broker: {e}")
 
 
 app = FastAPI(lifespan=lifespan)
@@ -48,3 +61,4 @@ async def get_root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+

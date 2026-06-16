@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page, Params
 
-from app.api.schemas import NewsItemOut, QueueDispatchResponse
-from app.tasks.filter import generate_publisher
+from app.api.schemas import NewsItemOut
 from app.repositories.news_item import NewsItemRepoDep
 
 
@@ -32,15 +31,3 @@ async def delete_news(news_id: int, news_repo: NewsItemRepoDep):
 
     await news_repo.delete(news)
 
-
-@router.post(
-    "/{news_id}/repost", response_model=QueueDispatchResponse, status_code=202
-)
-async def manual_repost(news_id: int, news_repo: NewsItemRepoDep):
-    """Manually enqueue a news item for reposting."""
-    news = await news_repo.get_by_id(news_id)
-    if not news:
-        raise HTTPException(status_code=404, detail="News not found")
-
-    await generate_publisher.publish(message=news_id)
-    return QueueDispatchResponse(status="queued", news_id=news_id)
